@@ -16,6 +16,7 @@ def inscription_server():
     }
 
 
+
     message_str = json.dumps(message)
     message_bytes = message_str.encode()
 
