@@ -113,28 +113,72 @@ def all_pieces():
     return pieces
 
 def play_move(state):
-    board = state["board"]
-    current_piece = state["piece"]
+    board = state["board"] #récupere le plateau actuel envoyé par le serveur
+    current_piece = state["piece"] # récupere la pièce que l’adversaire t’a donnée et que tu dois jouer maintenant
 
-    # Étape 1 : positions libres
-    vide_positions = [i for i, cell in enumerate(board) if cell is None]
 
-    # Étape 2 : pièces utilisées
-    utilisé_pieces = {piece for piece in board if piece is not None}
-    utilisé_pieces.add(current_piece)
 
-    # Étape 3 : pièces restantes
-    all_pieces = all_pieces()
-    restante_pieces = list(all_pieces - utilisé_pieces)
+    # cas si y a des pieces
+    position_gagnante = trouver_coup_gagnant(board, current_piece) #on reg si peut gagner en posant cette pièce qq part
 
-    # Étape 4 : choisir un coup aléatoire
-    choisir_pos = random.choice(vide_positions)
-    choisir_piece = random.choice(restante_pieces) if restante_pieces else None
+    if position_gagnante is not None:
+        # pcs déjà utilisées (sur le plateau + celle qu’on va poser)
+        pieces_utilisées = {piece for piece in board if piece is not None}
+        pieces_utilisées.add(current_piece)
+
+        # pieces restantes à choisir pour l’adversaire
+        toutes_les_pieces = all_pieces()
+        pieces_restantes = list(toutes_les_pieces - pieces_utilisées)
+        piece_donnee = random.choice(pieces_restantes) if pieces_restantes else None
+
+        return {
+            "pos": position_gagnante,
+            "piece": piece_donnee
+        }
+
+    # 2. Snn jouer au hasard
+    positions_vides = [i for i, case in enumerate(board) if case is None]
+
+    # mm calcul des pièces restantes
+    pieces_utilisées = {piece for piece in board if piece is not None}
+    pieces_utilisées.add(current_piece)
+    toutes_les_pieces = all_pieces()
+    pieces_restantes = list(toutes_les_pieces - pieces_utilisées)
+    
+    position_aleatoire = random.choice(positions_vides)
+    piece_donnee = random.choice(pieces_restantes) if pieces_restantes else None
 
     return {
-        "pos": choisir_pos,
-        "piece": choisir_piece
+        "pos": position_aleatoire,
+        "piece": piece_donnee
     }
+
+def trouver_coup_gagnant(board, piece):
+    
+    for i in range(16):
+        if board[i] is None: #donc si l'endroit est vide 
+            plateau_temp = board.copy() #on fait un faux plateau pour simuler si ca va gagner ou pas le coup
+            plateau_temp[i] = piece #on place la piece la ou ya  le vide 
+
+            # On reconstruit le plateau en 4x4
+            plateau_2d = [plateau_temp[j*4:(j+1)*4] for j in range(4)] #pr travailler avec les lignes colones et diagonales
+
+            # Vérifie lignes dabord puis colonnes puis diagonales
+            for ligne in plateau_2d:
+                if a_gagner(ligne):
+                    return i
+
+            for col in range(4):
+                colonne = [plateau_2d[row][col] for row in range(4)]
+                if a_gagner(colonne):
+                    return i
+
+            diag1 = [plateau_2d[d][d] for d in range(4)]
+            diag2 = [plateau_2d[d][3 - d] for d in range(4)]
+            if a_gagner(diag1) or a_gagner(diag2):
+                return i
+
+    return None
 
     
 
