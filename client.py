@@ -1,6 +1,7 @@
 import socket
 import json
 import threading
+import random
 
 def inscription_server():
     # Configuration du serveur
@@ -14,7 +15,6 @@ def inscription_server():
         "name": "fun_name_for_the_client",
         "matricules": ["12345", "67890"]
     }
-
 
 
     message_str = json.dumps(message)
@@ -72,6 +72,7 @@ def client(conn, addr):
             try:
                 json_data = json.loads(message)
                 requete = json_data.get("request")
+                
 
                 if requete == "ping":
                     response = {"response": "pong"}
@@ -98,8 +99,9 @@ def client(conn, addr):
     finally:
         conn.close()
         print(f"Connexion fermée avec {addr}")
+    
         
-        
+
 def all_pieces():
     pieces = set()
     for size in ["B", "S"]:
@@ -111,11 +113,51 @@ def all_pieces():
     return pieces
 
 def play_move(state):
-    return""
+    board = state["board"]
+    current_piece = state["piece"]
+
+    # Étape 1 : positions libres
+    vide_positions = [i for i, cell in enumerate(board) if cell is None]
+
+    # Étape 2 : pièces utilisées
+    utilisé_pieces = {piece for piece in board if piece is not None}
+    utilisé_pieces.add(current_piece)
+
+    # Étape 3 : pièces restantes
+    all_pieces = all_pieces()
+    restante_pieces = list(all_pieces - utilisé_pieces)
+
+    # Étape 4 : choisir un coup aléatoire
+    choisir_pos = random.choice(vide_positions)
+    choisir_piece = random.choice(restante_pieces) if restante_pieces else None
+
+    return {
+        "pos": choisir_pos,
+        "piece": choisir_piece
+    }
+
+    
+
+def a_gagner(ligne):
+    """
+    check si les 4 pièces d'une ligne ont un mm attribut cracterstique 
+    chaque pièce est une chaîne comme "BDCP" (ex : Grande, Foncée, Pleine, Carrée).
+    """
+    if None in ligne:
+        return False #si y a que 3 pieces doffice c ps gagné
+
+    # on parcourt les 4 attributs possibles des pièces
+    for i in range(4):  # 4 attributs
+        attributs = [piece[i] for piece in ligne]
+        if all(a == attributs[0] for a in attributs):
+            return True  # attribut commun 
+
+    return False #snn
 
         
 if __name__ == "__main__":
     inscription_server()
     server_local("0.0.0.0", 5001)
     client()
+    
     
