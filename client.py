@@ -1,6 +1,5 @@
 import socket
 import json
-import threading
 import random
  
  #Le serveur (le prof) est sur cette adresse IP et ce port on se connecte là pour s’inscrire au tournoi
@@ -56,7 +55,8 @@ def server_local(host, port):
     while True:
         conn, addr = server_socket.accept()  #chaque fois qu’un message du tournoi arrive on accepte la connexion entrante
         print(f"Connexion entrante depuis {addr}")
-        threading.Thread(target= client, args=(conn, addr)).start()
+        client(conn, addr)
+       # threading.Thread(target= client, args=(conn, addr)).start()
 
 def client(conn, addr): # fonction est lancée à chaque message reçu s’occupe de lire analyser et répondre au message
     try:
@@ -113,45 +113,31 @@ def all_pieces():
                     pieces.add(piece) #Tu ajoutes cette pièce dans l’ensemble.
     return pieces #La fonction retourne l’ensemble complet des 16 pièces du jeu.
 
-def play_move(state): #recevoir l’état du jeu jouer un coup et choisir une pièce à donner
-    board = state["board"] #récupere le plateau actuel envoyé par le serveur
-    current_piece = state["piece"] # récupere la pièce que l’adversaire t’a donnée et que tu dois jouer maintenant
-    # cas si y a des pieces
-    position_gagnante = trouver_coup_gagnant(board, current_piece) #on reg si peut gagner en posant cette pièce qq part
+def play_move(state):
+    board = state["board"]
+    current_piece = state["piece"]
 
-    if position_gagnante is not None:
-        # pcs déjà utilisées (sur le plateau + celle qu’on va poser)
-        pieces_utilisées = {piece for piece in board if piece is not None}
-        pieces_utilisées.add(current_piece)
+    vide_positions = [i for i, cell in enumerate(board) if cell is None]
+    utilisé_pieces = {p for p in board if p is not None}
+    utilisé_pieces.add(current_piece)
 
-        # pieces restantes à choisir pour l’adversaire
-        toutes_les_pieces = all_pieces()
-        pieces_restantes = list(toutes_les_pieces - pieces_utilisées)
-        piece_donnee = random.choice(pieces_restantes) if pieces_restantes else None
+    all_pieces = all_pieces()
+    restante_pieces = list(all_pieces - utilisé_pieces)
 
-        return {
-            "pos": position_gagnante,
-            "piece": piece_donnee
-        }
+    # 1. Chercher un coup gagnant
+    if trouver_coup_gagnant(board, current_piece) is not None:
+        chosen_pos = trouver_coup_gagnant(board, current_piece)
+    else:
+        chosen_pos = random.choice(vide_positions)
 
-    # 2. Snn jouer au hasard
-    positions_vides = [i for i, case in enumerate(board) if case is None]
-
-    # mm calcul des pièces restantes
-    pieces_utilisées = {piece for piece in board if piece is not None} # récupère toutes les pièces déjà posées
-    pieces_utilisées.add(current_piece) #  ajoutes aussi la pièce que tu viens de poser
-    toutes_les_pieces = all_pieces()
-    pieces_restantes = list(toutes_les_pieces - pieces_utilisées)
-    
-    position_aleatoire = random.choice(positions_vides)
-    piece_donnee = random.choice(pieces_restantes) if pieces_restantes else None #Tu  choisis une au hasard à donner à l'adversaire
-
-
+    # 2. Donner une pièce safe à l’adversaire
+    chosen_piece = trouve_securité_piece(board, restante_pieces)
 
     return {
-        "pos": position_aleatoire,
-        "piece": piece_donnee
+        "pos": chosen_pos,
+        "piece": chosen_piece
     }
+    
 
 def trouver_coup_gagnant(board, piece):
     
@@ -197,6 +183,50 @@ def a_gagner(ligne):
             return True  # attribut commun 
 
     return False #snn
+
+def trouve_securité_piece(board, restante_pieces):
+    securité_pieces = []
+
+    for piece in restante_pieces:
+        safe = True
+        for i in range(16):
+            if board[i] is None:
+                temp_board = board.copy()
+                temp_board[i] = piece
+
+                # reconstruction du plateau
+                grid = [temp_board[j*4:(j+1)*4] for j in range(4)]
+
+                # tester lignes
+                for ligne in grid:
+                    if a_gagner(ligne):
+                        safe = False
+                        break
+                # colonnes
+                if safe:
+                    for col in range(4):
+                        colonne = [grid[row][col] for row in range(4)]
+                        if a_gagner(colonne):
+                            safe = False
+                            break
+                # diagonales
+                if safe:
+                    diag1 = [grid[d][d] for d in range(4)]
+                    diag2 = [grid[d][3 - d] for d in range(4)]
+                    if a_gagner(diag1) or a_gagner(diag2):
+                        safe = False
+
+                if not safe:
+                    break
+
+        if safe:
+            securité_pieces.append(piece)
+
+    if securité_pieces:
+        return random.choice(securité_pieces)
+    else:
+        return random.choice(restante_pieces)
+   
 
         
 if __name__ == "__main__":

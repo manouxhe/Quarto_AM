@@ -6,6 +6,7 @@ plateau_test = [None] * 16
 # choisis  pièce exis a tester 
 piece_reçue = "BDCP"  
 
+# Simule etat envoye par le serveur
 etat_simulé = {
     "board": plateau_test,
     "piece": piece_reçue
