@@ -2,38 +2,37 @@ import socket
 import json
 import threading
 import random
-
-def inscription_server():
-    # Configuration du serveur
-    server = '192.168.129.15' 
+ 
+ #Le serveur (le prof) est sur cette adresse IP et ce port on se connecte là pour s’inscrire au tournoi
+def inscription_server():   
+    server = '192.168.129.15'  # Adressse ip du serveur
     port = 3000       # Port du serveur auquel on se connecte
 
 
-    message = {
+    message = {   #message d’inscription à envoyer au prof :
         "request": "subscribe",
         "port": 5001,
-        "name": "fun_name_for_the_client",
+        "name": "AYOUBQUARTOOOOO",
         "matricules": ["12345", "67890"]
     }
 
-
-    message_str = json.dumps(message)
+    message_str = json.dumps(message)  #transformes le message JSON en texte brut puis en bytes pour l’envoyer par le réseau
     message_bytes = message_str.encode()
 
     # Création du socket TCP
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    try:
+    try: # Connexion avec le serveur
         client_socket.connect((server, port))
         print("Connecté au serveur.")
 
-        # Envoi du message
-        client_socket.sendall(message_bytes)
+        # Envoi du message d’inscription au tournoi
+        client_socket.sendall(message_bytes)  
         print("Message envoyé au serveur.")
 
         # Boucle de réception des messages
         while True:
-            data = client_socket.recv(4096)
+            data = client_socket.recv(4096) # Attente des messages du serveur (genre confirmation ou infos)
             if not data:
                 print("Connexion fermée par le serveur.")
                 break
@@ -46,23 +45,23 @@ def inscription_server():
         
     
 
-
+# propre serveur local qui va écouter les messages du prof 
 def server_local(host, port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((host, port))
-    server_socket.listen()
+    server_socket.listen() #prêt à écouter les connexions
 
     print(f"Serveur local est en écoute sur le port {port}...")
 
     while True:
-        conn, addr = server_socket.accept()
+        conn, addr = server_socket.accept()  #chaque fois qu’un message du tournoi arrive on accepte la connexion entrante
         print(f"Connexion entrante depuis {addr}")
         threading.Thread(target= client, args=(conn, addr)).start()
 
-def client(conn, addr):
+def client(conn, addr): # fonction est lancée à chaque message reçu s’occupe de lire analyser et répondre au message
     try:
         while True:
-            data = conn.recv(4096)
+            data = conn.recv(4096) # lis ce que le serveur t’a envoyé (jusqu’à 4096 octets).
             if not data:
                 break
 
@@ -70,11 +69,13 @@ def client(conn, addr):
             print(f"Message reçu de {addr} : {message}")
 
             try:
-                json_data = json.loads(message)
-                requete = json_data.get("request")
+                json_data = json.loads(message) # convertis le message en texte, puis en dictionnaire Python (grâce à json.loads).
+                requete = json_data.get("request") #regardes le type de message envoyé par le serveur
                 
+                 #"ping" → test de connexion
+                 #"play" → c’est à toi de jouer
 
-                if requete == "ping":
+                if requete == "ping":  
                     response = {"response": "pong"}
                     conn.sendall(json.dumps(response).encode())
 
@@ -109,15 +110,12 @@ def all_pieces():
             for filling in ["E", "F"]:
                 for shape in ["C", "P"]:
                     piece = size + color + filling + shape
-                    pieces.add(piece)
-    return pieces
+                    pieces.add(piece) #Tu ajoutes cette pièce dans l’ensemble.
+    return pieces #La fonction retourne l’ensemble complet des 16 pièces du jeu.
 
-def play_move(state):
+def play_move(state): #recevoir l’état du jeu jouer un coup et choisir une pièce à donner
     board = state["board"] #récupere le plateau actuel envoyé par le serveur
     current_piece = state["piece"] # récupere la pièce que l’adversaire t’a donnée et que tu dois jouer maintenant
-
-
-
     # cas si y a des pieces
     position_gagnante = trouver_coup_gagnant(board, current_piece) #on reg si peut gagner en posant cette pièce qq part
 
@@ -140,13 +138,15 @@ def play_move(state):
     positions_vides = [i for i, case in enumerate(board) if case is None]
 
     # mm calcul des pièces restantes
-    pieces_utilisées = {piece for piece in board if piece is not None}
-    pieces_utilisées.add(current_piece)
+    pieces_utilisées = {piece for piece in board if piece is not None} # récupère toutes les pièces déjà posées
+    pieces_utilisées.add(current_piece) #  ajoutes aussi la pièce que tu viens de poser
     toutes_les_pieces = all_pieces()
     pieces_restantes = list(toutes_les_pieces - pieces_utilisées)
     
     position_aleatoire = random.choice(positions_vides)
-    piece_donnee = random.choice(pieces_restantes) if pieces_restantes else None
+    piece_donnee = random.choice(pieces_restantes) if pieces_restantes else None #Tu  choisis une au hasard à donner à l'adversaire
+
+
 
     return {
         "pos": position_aleatoire,
