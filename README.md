@@ -9,12 +9,13 @@ Le but est de crééer une ia pour jouer au jeu Quarto qui choisit les bons coup
 
 ## Bibliothèques utilisées
 - Python 
-- random
-........ a completer 
+- Random
+- Socket
+- Json
+- Threading
 
 ## Stratégie (à compléter)
-..... l’objectif est de détecter les alignements dangereux et forcer l’adversaire à donner une pièce risquée.
-a completer 
+À chaque tour de jeu, notre IA commence par vérifier si elle peut poser la pièce reçue à un endroit qui lui permet de gagner directement. Si une position qui permet de gagner est détectée, elle joue ce coup.
 
 ## Lancement
 L'IA est apl par le gestionnaire de tournoi grace au fichier `client.py`.
