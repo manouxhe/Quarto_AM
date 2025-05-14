@@ -5,7 +5,7 @@
 - El Kadi Manar  – Matricule : 23346
 
 ## Objectif
-Le but est de crééer une ia pour jouer au jeu Quarto qui choisit les bons coups
+Le but ici est de crééer une ia pour jouer au jeu Quarto qui choisit les bons coups.
 
 ## Bibliothèques utilisées
 - Python 
@@ -18,4 +18,4 @@ Le but est de crééer une ia pour jouer au jeu Quarto qui choisit les bons coup
 À chaque tour de jeu, notre IA commence par vérifier si elle peut poser la pièce reçue à un endroit qui lui permet de gagner directement. Si une position qui permet de gagner est détectée, elle joue ce coup.
 
 ## Lancement
-L'IA est apl par le gestionnaire de tournoi grace au fichier `client.py`.
+L'IA est appelée par le gestionnaire de tournoi grace au fichier `client.py`.

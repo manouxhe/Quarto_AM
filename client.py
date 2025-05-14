@@ -121,8 +121,8 @@ def play_move(state):
     utilisé_pieces = {p for p in board if p is not None}
     utilisé_pieces.add(current_piece)
 
-    all_pieces = all_pieces()
-    restante_pieces = list(all_pieces - utilisé_pieces)
+    ensemble_pieces = all_pieces()
+    restante_pieces = list(ensemble_pieces - utilisé_pieces)
 
     # 1. Chercher un coup gagnant
     if trouver_coup_gagnant(board, current_piece) is not None:
