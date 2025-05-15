@@ -11,8 +11,8 @@ def inscription_server():
     message = {   #message d’inscription à envoyer au prof :
         "request": "subscribe",
         "port": 5001,
-        "name": "AYOUBQUARTOOOOO",
-        "matricules": ["12345", "67890"]
+        "name": "QUARTOOOOO",
+        "matricules": ["23218", "23346"]
     }
 
     message_str = json.dumps(message)  #transformes le message JSON en texte brut puis en bytes pour l’envoyer par le réseau
@@ -56,8 +56,7 @@ def server_local(host, port):
         conn, addr = server_socket.accept()  #chaque fois qu’un message du tournoi arrive on accepte la connexion entrante
         print(f"Connexion entrante depuis {addr}")
         client(conn, addr)
-       # threading.Thread(target= client, args=(conn, addr)).start()
-
+       
 def client(conn, addr): # fonction est lancée à chaque message reçu s’occupe de lire analyser et répondre au message
     try:
         while True:
