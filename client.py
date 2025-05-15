@@ -184,7 +184,7 @@ def a_gagner(ligne):
 
     return False #snn
 
-def trouve_securité_piece(board, restante_pieces):
+def trouve_securité_piece(board, restante_pieces): #Ne pas donner une pièce gagnante à l'adversaire
     securité_pieces = []
 
     for piece in restante_pieces:
@@ -202,14 +202,14 @@ def trouve_securité_piece(board, restante_pieces):
                     if a_gagner(ligne):
                         safe = False
                         break
-                # colonnes
+                # on regarde si les colonnes sont safes 
                 if safe:
                     for col in range(4):
                         colonne = [grid[row][col] for row in range(4)]
                         if a_gagner(colonne):
                             safe = False
                             break
-                # diagonales
+                # on regarde si les diagonalesson safes
                 if safe:
                     diag1 = [grid[d][d] for d in range(4)]
                     diag2 = [grid[d][3 - d] for d in range(4)]
@@ -236,5 +236,6 @@ if __name__ == "__main__":
     inscription_server()
     server_local("0.0.0.0", 5001)
     client()
+    
     
     

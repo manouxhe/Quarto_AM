@@ -192,7 +192,7 @@ def test_message_non_json():
     start_server()
     s = socket.socket()
     s.connect(("localhost", 5001))
-    s.send(b"Ceci n'est pas du JSON")  # message illisible
+    s.send(b"Ceci n'est pas du JSON")  # message non json
     time.sleep(0.2)  # laisse le serveur le traiter
     s.close()
 
@@ -201,7 +201,7 @@ def test_message_non_json():
     start_server()
     s = socket.socket()
     s.connect(("localhost", 5001))
-    s.send(b"<<<ERREUR>>>")  # pas un JSON
+    s.send(b"<<<ERREUR>>>")  # pas un JSON 
     time.sleep(0.3)
     s.close()
 
@@ -233,3 +233,40 @@ def test_piece_vraiment_dangereuse_forcee():
 
 
 
+
+
+def test_trouver_coup_gagnant_colonne():
+    board = [None]*16
+    board[0] = board[4] = board[8] = "BDCP"
+    piece = "BDCP"
+    assert trouver_coup_gagnant(board, piece) == 12
+
+def test_trouver_coup_gagnant_diagonale():
+    board = [None]*16
+    board[0] = board[5] = board[10] = "BDCP"
+    piece = "BDCP"
+    assert trouver_coup_gagnant(board, piece) == 15
+
+def test_request_inconnue():
+    start_server()
+    s = socket.socket()
+    s.connect(("localhost", 5001))
+    s.send(json.dumps({"request": "inconnu"}).encode())
+    time.sleep(0.2)
+    s.close()
+
+
+def test_trouve_securite_piece_evite_victoire():
+    board = [
+        "BDCP", None, None, None,
+        "BDCP", None, None, None,
+        "BDCP", None, None, None,
+        None,  None, None, None
+    ]
+    # BDCP posée en (0,0), (1,0), (2,0) -> si l'IA donne BDCP, l'adversaire peut jouer en (3,0)
+    pieces_restantes = ["BDCP", "SLFP"]
+    
+    safe_piece = trouve_securité_piece(board, pieces_restantes)
+
+    # IA ne doit pas donner BDCP car elle permet  victoire immédiate
+    assert safe_piece != "BDCP"
