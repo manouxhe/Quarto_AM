@@ -115,11 +115,11 @@ def all_pieces():
 
 def play_move(state):
     board = state["board"]
-    current_piece = state["piece"]
+    current_piece = state["piece"] #Etat actuel dy plateau avec les pièces 
 
-    vide_positions = [i for i, cell in enumerate(board) if cell is None]
-    utilisé_pieces = {p for p in board if p is not None}
-    utilisé_pieces.add(current_piece)
+    vide_positions = [i for i, cell in enumerate(board) if cell is None] #défini les positins vide 
+    utilisé_pieces = {p for p in board if p is not None} #les pièces utilisées"
+    utilisé_pieces.add(current_piece) #rajouter la pièce
 
     ensemble_pieces = all_pieces()
     restante_pieces = list(ensemble_pieces - utilisé_pieces)
