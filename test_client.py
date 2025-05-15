@@ -1,4 +1,19 @@
-from client import a_gagner, trouver_coup_gagnant, play_move, trouve_securité_piece, all_pieces
+from client import a_gagner, trouver_coup_gagnant, play_move, trouve_securité_piece, all_pieces, server_local
+import socket
+import json
+import threading
+import time
+
+from client import server_local  # adapte si ton fichier ne s'appelle pas client.py
+
+def start_server():
+    def run_server():
+        server_local("0.0.0.0", 5001)
+
+    t = threading.Thread(target=run_server, daemon=True)
+    t.start()
+    time.sleep(0.5)
+
 
 def test_a_gagner_vrai(): #on test la fonction pr 4 dernier attributs ici P
     ligne = ["BDCP", "SDCP", "LDCP", "CDCP"] 
@@ -146,3 +161,75 @@ def test_play_move_piece_inconnue(): #avec pièce inconnue (pas dans all_pieces)
 
 
 #58%
+
+def test_ping_response():
+    start_server()
+    s = socket.socket()
+    s.connect(("localhost", 5001))
+    s.send(json.dumps({"request": "ping"}).encode())
+    response = s.recv(512).decode()
+    assert json.loads(response)["response"] == "pong"
+    s.close()
+
+ 
+def test_play_response():
+    start_server()
+    virtual_state = {
+        "board": [None] * 16,
+        "piece": "SDFP"
+    }
+    s = socket.socket()
+    s.connect(("localhost", 5001))
+    s.send(json.dumps({'request': 'play', 'state': virtual_state}).encode())
+    response = json.loads(s.recv(512).decode())
+
+    assert response['response'] == 'move'
+    assert 'pos' in response['move'] and isinstance(response['move']['pos'], int)
+    assert 'piece' in response['move'] and isinstance(response['move']['piece'], str)
+    s.close()
+
+def test_message_non_json():
+    start_server()
+    s = socket.socket()
+    s.connect(("localhost", 5001))
+    s.send(b"Ceci n'est pas du JSON")  # message illisible
+    time.sleep(0.2)  # laisse le serveur le traiter
+    s.close()
+
+
+def test_message_non_json():
+    start_server()
+    s = socket.socket()
+    s.connect(("localhost", 5001))
+    s.send(b"<<<ERREUR>>>")  # pas un JSON
+    time.sleep(0.3)
+    s.close()
+
+
+def test_play_move_aucune_piece_a_donner():
+    used = list(all_pieces())
+    board = used[:-1] + [None]  # 15 pièces déjà posées, 1 vide
+    piece = used[-1]  # la 16e est celle qu’on doit jouer maintenant
+
+    state = {
+        "board": board,
+        "piece": piece
+    }
+
+    move = play_move(state)
+
+    assert move["pos"] in range(16)
+    # il ne reste plus de pièce à donner, donc l’IA doit donner None ou quelque chose hors des pièces
+    assert move["piece"] is None or move["piece"] in all_pieces()
+
+
+def test_piece_vraiment_dangereuse_forcee():
+    board = ["BDCP", "BDCP", "BDCP", None] + [None] * 12
+    # BDCP est déjà alignée, si on en place une 4e => danger
+    dangereuse = ["BDCP"]
+    p = trouve_securité_piece(board, dangereuse)
+    # Il n’y a que cette pièce : donc il la retourne malgré le danger
+    assert p == "BDCP"
+
+
+

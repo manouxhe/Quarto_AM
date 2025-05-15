@@ -223,9 +223,12 @@ def trouve_securité_piece(board, restante_pieces):
             securité_pieces.append(piece)
 
     if securité_pieces:
-        return random.choice(securité_pieces)
+     return random.choice(securité_pieces)
+    elif restante_pieces:
+     return random.choice(restante_pieces)
     else:
-        return random.choice(restante_pieces)
+     return None
+
    
 
         
